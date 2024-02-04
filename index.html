@@ -18,14 +18,26 @@
         });
       }
 
-      const copyContent = async () => {
+      //   const copyContent = async () => {
+      //     try {
+      //       const text = document.getElementById("target").innerHTML;
+      //       await navigator.clipboard.writeText(text);
+      //     } catch (err) {
+      //       console.error("Failed to copy: ", err);
+      //     }
+      //   };
+
+      function copyContent() {
+        const target = document.getElementById("target");
+        target.focus();
+        target.select();
+
         try {
-          const text = document.getElementById("target").innerHTML;
-          await navigator.clipboard.writeText(text);
+          document.execCommand("copy");
         } catch (err) {
-          console.error("Failed to copy: ", err);
+          console.error("Unable to copy to clipboard", err);
         }
-      };
+      }
 
       function generateMarkdown(lines) {
         return lines.map(([colored, text]) => {
@@ -36,7 +48,7 @@
       function writeMarkdownToTextArea(lines) {
         const target = document.getElementById("target");
 
-        lines.forEach(l => target.append(l))
+        lines.forEach((l) => target.append(l));
       }
 
       function clearTextArea() {
@@ -56,8 +68,8 @@
             const table = extractTable(pastedText);
             const lines = parseLines(table);
             const markdown = generateMarkdown(lines);
-            writeMarkdownToTextArea(markdown)
-            
+            writeMarkdownToTextArea(markdown);
+
             $("#clear").prop("hidden", false);
           } catch (e) {
             document.getElementById("target").innerHTML =
