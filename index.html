@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script>
+      function extractTable(html) {
+        const parser = new DOMParser();
+        const htmlDoc = parser.parseFromString(html, "text/html");
+
+        return htmlDoc.getElementsByTagName("tbody")[0];
+      }
+
+      function parseLines(htmlTable) {
+        return Array.from(htmlTable.children).map((l) => {
+          const isColored = !!$(l).find(`span[style*="color: rgb(0, 0, 255)"]`)
+            .length;
+
+          return [isColored, l.textContent];
+        });
+      }
+
+      const copyContent = async () => {
+        try {
+          const text = document.getElementById("target").innerHTML;
+          await navigator.clipboard.writeText(text);
+        } catch (err) {
+          console.error("Failed to copy: ", err);
+        }
+      };
+
+      function generateMarkdown(lines) {
+        return lines.map(([colored, text]) => {
+          return `${colored ? "**T**" : "**C**"}: ${text}\r\n\r\n---\r\n\r\n`;
+        });
+      }
+
+      function writeMarkdownToTextArea(lines) {
+        const target = document.getElementById("target");
+
+        lines.forEach(l => target.append(l))
+      }
+
+      function clearTextArea() {
+        document.getElementById("target").innerHTML = "";
+        $("#clear").prop("hidden", true);
+      }
+
+      document.addEventListener("paste", async function (e) {
+        e.preventDefault();
+
+        var pastedText = "";
+
+        if (e.clipboardData && e.clipboardData.getData) {
+          pastedText = e.clipboardData.getData("text/html");
+
+          try {
+            const table = extractTable(pastedText);
+            const lines = parseLines(table);
+            const markdown = generateMarkdown(lines);
+            writeMarkdownToTextArea(markdown)
+            
+            $("#clear").prop("hidden", false);
+          } catch (e) {
+            document.getElementById("target").innerHTML =
+              "Paste ERROR: copy again?";
+            $("#clear").prop("hidden", false);
+          }
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target.id === "copy") {
+          // clear text area after copy
+          copyContent();
+          clearTextArea();
+        }
+
+        if (e.target.id === "clear") {
+          clearTextArea();
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <ol>
+      <li>
+        load a transcript page (like
+        <a target="_blank" href="https://nihongothatsdan.com/197-2/">197</a>)
+      </li>
+      <li>select all (ctrl/cmd + a)</li>
+      <li>copy (ctrl/cmd + c)</li>
+      <li>click this textarea, then paste (ctrl/cmd + v):</li>
+      <textarea id="target"></textarea
+      ><button hidden id="clear">clear</button>
+      <li>Click:</li>
+      <button id="copy">Copy to clipboard</button>
+    </ol>
+  </body>
+</html>
